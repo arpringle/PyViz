@@ -113,22 +113,59 @@ class PyVizApplication (Gtk.Application):
         window.present()
 
     # This is a callback function, activated whenever the user clicks "submit"
-    def _submit_clicked(self, button, user_data):
-        if validators.url(user_data.get_text()) == True:
-            url = [user_data.get_text()]
+    def _submit_clicked(self, button, url_entry):
+
+        # Grab the `url` function from the validators package,
+        # and check it against the text in the URL entry.
+        # If the function returns true, we can proceed.
+        if validators.url(url_entry.get_text()):
+            
+            # If the URL is valid, write the value to a variable.
+            # !Important! This is actually a list and not a string,
+            # because the YoutubeDL object's "download" function
+            # takes a list of URL's as its parameter.
+            url = [url_entry.get_text()]
+
+            # Create a new thread in which we can download from YouTube asycnronously.
+            # We pass call the application object's "get_audio" function (defined below)
+            # as the target of the thread.
             audioDlThread = threading.Thread(target=self.get_audio, args=(url, button))
             audioDlThread.start()
-                
+        
+        # If the URL fails to validate, output an error to the command line.
+        # TODO: Actually show the error in the GUI instead of just printing it.
         else: print("err: invalid URL")
     
+    # This function downloads the data from YouTube. It is run asynchronously in a thread.
     def get_audio(self, url, submit_button):
+
+        # We make some UI changes to indicate to the user that the program is working. 
         submit_button.set_sensitive(False)
+
+        # Declare a dictionary containing options for the downloader
+        # TODO: Maybe expose some extra Download options to the user
+        # ex - download video and use as background for visualization
         ydl_opts = {
                 'format': 'mp3/bestaudio/best',
                 }
-        
+
+        # Instantiate a `YoutubeDL` object, using `ydl_opts` as the parameter.
+        # Then, call the `download` method, passing `url` as a parameter.
+        # Finally, take the return value, and write it to a variable `error_code`.
         error_code = YoutubeDL(ydl_opts).download(url)
 
+
+# THE REST OF THE PROGRAM LOGIC
+
+# Instantiate the `PyVizApplication` object
 app = PyVizApplication()
+
+# Call the `run` method on the newly-created app.
+# We also pass command line arguments to the `run` method via `sys.argv`
+# We don't use command line arguments.
+# However, gtk requires access to command-line arguments.
+# Then, we save the exit status of the app to the variable `exit_status`
 exit_status = app.run(sys.argv)
+
+# After the app is done running, we exit the interpreter and raise the exit status via a method. 
 sys.exit(exit_status)
