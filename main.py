@@ -9,6 +9,8 @@
 # (We don't support command-line args, but the widget toolkit does, so that's why we need it)
 import sys
 
+import os
+
 # GObject is a library for the C language that adds Object-Oriented features.
 # `gi` is a package that provides Python bindings for the most popular GObject-based C libraries.
 # Despite the underlying libraries inside the `gi`` package being written in C, all of the code
@@ -19,7 +21,8 @@ import gi
 # `gtk` is a powerful cross-platform toolkit, originally written in C.
 # Here we are using the Python language binding provided by `gi``
 gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk
+gi.require_version("Gst", "1.0")
+from gi.repository import GLib, Gtk, Gst
 
 # `yt_dlp` is an incredibly powerful command-line tool for downloading content from YouTube.
 # It also provides a Python package. Here, we import yt_dlp's 'YoutubeDL' class.
@@ -28,7 +31,7 @@ from yt_dlp import YoutubeDL
 
 # We use the `validators` package to check that the URL that the user enters into the program
 # is actually a valid URL before we do anything with it.
-import validators
+from validators import url as urlValidator
 
 # Downloading a video is a long operation. By default, using YoutubeDL will freeze the GUI
 # until the video is done downloading, making the user think something is broken
@@ -60,7 +63,7 @@ class PyVizApplication (Gtk.Application):
         
         # Create an image from the logo file. Add it to the mainbox. 
         logo = Gtk.Image()
-        logo.set_from_file("./data/LOGO.png")
+        logo.set_from_file(os.path.join("data","LOGO.png"))
         logo.set_size_request(128,256)
         mainbox.append(logo)
 
@@ -120,7 +123,7 @@ class PyVizApplication (Gtk.Application):
         # Grab the `url` function from the validators package,
         # and check it against the text in the URL entry.
         # If the function returns true, we can proceed.
-        if validators.url(url_entry.get_text()):
+        if urlValidator(url_entry.get_text()):
             
             # If the URL is valid, write the value to a variable.
             # !Important! This is actually a list and not a string,
@@ -150,6 +153,8 @@ class PyVizApplication (Gtk.Application):
         # ex - download video and use as background for visualization
         ydl_opts = {
             'format': 'wav/bestaudio/best',
+            'paths': {'home' : os.path.join("downloads", "audio")},
+            'outtmpl' : "cur_audio",
             'postprocessors': [{  # Extract audio using ffmpeg
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'wav',
@@ -163,8 +168,10 @@ class PyVizApplication (Gtk.Application):
         submit_button.set_sensitive(True)
         feedback_text.set_label("");
         spinner.stop()
+        self.visualize_audio()
 
-
+    def visualize_audio(self):
+        print("TODO")
 
 # THE REST OF THE PROGRAM LOGIC
 
@@ -177,6 +184,7 @@ app = PyVizApplication()
 # However, gtk requires access to command-line arguments.
 # Then, we save the exit status of the app to the variable `exit_status`
 exit_status = app.run(sys.argv)
+
 
 # After the app is done running, we exit the interpreter and raise the exit status via a method. 
 sys.exit(exit_status)
