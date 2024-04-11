@@ -68,7 +68,7 @@ class PyVizApplication (Gtk.Application):
         welcome_text = Gtk.Label()
         welcome_text.set_justify(Gtk.Justification.CENTER)
         welcome_text.set_valign(Gtk.Align.CENTER)
-        welcome_text.set_label("Welcome to PyViz, the Python music visualizer.\n\nTo get started, enter a Youtube URL below, then hit 'Submit'!")
+        welcome_text.set_label("Welcome to PyViz, the Python music visualizer.\nTo get started, enter a Youtube URL below, then hit 'Submit'!")
         mainbox.append(welcome_text)
 
         # Create a box that will hold the URL entry and the "Submit" button
@@ -83,7 +83,6 @@ class PyVizApplication (Gtk.Application):
         # Create the submit button and add it to the url_entry_box
         submit_button = Gtk.Button()
         submit_button.set_label("Submit")
-        submit_button.connect("clicked", self._submit_clicked, url_entry)
         url_entry_box.append(submit_button)
 
         # Append the completed url_entry_box to the mainbox
@@ -91,7 +90,7 @@ class PyVizApplication (Gtk.Application):
 
         # Create a box that will hold a label with "feedback text", as well as a spinner.
         feedback_text_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing=8)
-        url_entry_box.set_halign(Gtk.Align.CENTER)
+        feedback_text_box.set_halign(Gtk.Align.CENTER)
 
         # Create a label to hold the feedback text, ie, any errors or messages.
         # Then add it to the feedback_text_box
@@ -112,8 +111,11 @@ class PyVizApplication (Gtk.Application):
         # Present the window
         window.present()
 
+        # Connect the submit button's "clicked" signal to the submit button.
+        submit_button.connect("clicked", self._submit_clicked, url_entry, feedback_text_spinner, feedback_text)
+
     # This is a callback function, activated whenever the user clicks "submit"
-    def _submit_clicked(self, button, url_entry):
+    def _submit_clicked(self, button, url_entry, spinner, feedback_text):
 
         # Grab the `url` function from the validators package,
         # and check it against the text in the URL entry.
@@ -129,30 +131,39 @@ class PyVizApplication (Gtk.Application):
             # Create a new thread in which we can download from YouTube asycnronously.
             # We pass call the application object's "get_audio" function (defined below)
             # as the target of the thread.
-            audioDlThread = threading.Thread(target=self.get_audio, args=(url, button))
+            audioDlThread = threading.Thread(target=self.get_audio, args=(url, button, spinner, feedback_text))
             audioDlThread.start()
         
-        # If the URL fails to validate, output an error to the command line.
-        # TODO: Actually show the error in the GUI instead of just printing it.
-        else: print("err: invalid URL")
+        # If the URL fails to validate, notify the user
+        else: feedback_text.set_label("Content couldn't be fetched; invalid URL.");
     
     # This function downloads the data from YouTube. It is run asynchronously in a thread.
-    def get_audio(self, url, submit_button):
+    def get_audio(self, url, submit_button, spinner, feedback_text):
 
         # We make some UI changes to indicate to the user that the program is working. 
         submit_button.set_sensitive(False)
+        feedback_text.set_label("The program is fetching content from YouTube");
+        spinner.start()
 
         # Declare a dictionary containing options for the downloader
         # TODO: Maybe expose some extra Download options to the user
         # ex - download video and use as background for visualization
         ydl_opts = {
-                'format': 'mp3/bestaudio/best',
-                }
+            'format': 'wav/bestaudio/best',
+            'postprocessors': [{  # Extract audio using ffmpeg
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'wav',
+            }]
+        }
 
         # Instantiate a `YoutubeDL` object, using `ydl_opts` as the parameter.
         # Then, call the `download` method, passing `url` as a parameter.
         # Finally, take the return value, and write it to a variable `error_code`.
         error_code = YoutubeDL(ydl_opts).download(url)
+        submit_button.set_sensitive(True)
+        feedback_text.set_label("");
+        spinner.stop()
+
 
 
 # THE REST OF THE PROGRAM LOGIC
