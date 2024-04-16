@@ -1,2 +1,4 @@
 downloads/
 videoSearcher.py
+__pycache__/
+.tmp/
