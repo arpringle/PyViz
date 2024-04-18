@@ -108,8 +108,8 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         # We don't download the actual audio now. That comes later.
         # Instead, we just want metadata about the video,
         # in order to show  the user what result we came back with for their query.
-        os.mkdir(os.path.join(".tmp", str(i)))
         for i in range(1,11):
+            os.mkdir(os.path.join(".tmp", str(i)))
             
             # This is a dictionary containing runtime options for the downloader.
             ydl_search_opts = {
