@@ -130,7 +130,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 # Save the downloads to a directory called .tmp\<i>\
                 # This means each search result gets a unique folder.
                 'paths': {
-                    'home' : os.path.join(".tmp", str(i))  
+                    'home' : os.path.join(".",".tmp", str(i))  
                 },
 
                 # Don't actually download the video itself at all.
