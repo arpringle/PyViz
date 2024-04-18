@@ -151,6 +151,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 # If not, don't use the `IMG` part
                 'outtmpl' : {
                     'default' : '%(title)s',
+                    'link' : '%(title)s'
                     'thumbnail' : 'IMG-%(title)s'
                 }
             }
