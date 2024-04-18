@@ -147,7 +147,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 # "IMG-videotitle.fileextension"
                 # If not, don't use the `IMG` part
                 'outtmpl' : {
-                    'default' : '%(title)s.%(ext)s',
+                    'default' : '%(title)s',
                     'thumbnail' : 'IMG-%(title)s'
                 }
             }
