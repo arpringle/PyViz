@@ -144,7 +144,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 'writethumbnail' : 'true',
 
                 # Write the YouTube URL to file
-                'writeurllink' : 'true',
+                'writewebloclink' : 'true',
 
                 # If it's the thumbnail, we name the output file something like
                 # "IMG-videotitle.fileextension"
@@ -211,7 +211,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             for filename in os.listdir(os.path.join(".tmp",str(i))):
                 # If the filename contains "IMG-", we know that it is the thumbnail.
                 # This method might fail if the video title has "IMG-" in it,
-                if os.path.splitext(filename)[1] == ".url":
+                if os.path.splitext(filename)[1] == ".webloc":
                     # Now we can save the relative path to the thumbnail
                     url_file_path = os.path.join(".tmp", str(i), filename)
 

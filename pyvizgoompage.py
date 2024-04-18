@@ -46,10 +46,14 @@ class PyVizGoomPage(Adw.NavigationPage):
                 'preferredcodec': 'wav',
             }]
         }
+        print(url_file_path)
         url=""
+        i = 0
         for line in open(url_file_path, "r"):
-            if line != "URL\n":
-                url = line[4:(len(line)-1)]
+            i = i+1
+            if i == 6:
+                url = line[9:(len(line)-10)]
+
         YoutubeDL(ydl_opts).download(url)
         self.viz(spinner, mainbox)
         return
@@ -74,6 +78,7 @@ class PyVizGoomPage(Adw.NavigationPage):
         bus.connect("message::eos", self.on_eos, loop)
         bus.connect("message::error", self.on_error, loop)
 
+        spinner.stop()
         pipeline.set_state(Gst.State.PLAYING)
 
         try:
