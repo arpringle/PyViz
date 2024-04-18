@@ -97,7 +97,9 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         # Technically, we don't need to create the .tmp directory here,
         # because the YouTube downloader does it automatically, but this block
         # basically does all the error handling.
-        try: rmtree(".tmp")
+        try:
+            rmtree(".tmp")
+            os.mkdir(".tmp")
         except:
             os.mkdir(".tmp")
         
@@ -106,6 +108,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         # We don't download the actual audio now. That comes later.
         # Instead, we just want metadata about the video,
         # in order to show  the user what result we came back with for their query.
+        os.mkdir(os.path.join(".tmp", str(i)))
         for i in range(1,11):
             
             # This is a dictionary containing runtime options for the downloader.
