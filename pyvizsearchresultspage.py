@@ -144,10 +144,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 'writethumbnail' : 'true',
 
                 # Write the YouTube URL to file
-                #'writewebloclink' : 'true',
-
-                #test
-                'writeannotations' : 'true',
+                'writewebloclink' : 'true',
 
                 # If it's the thumbnail, we name the output file something like
                 # "IMG-videotitle.fileextension"
