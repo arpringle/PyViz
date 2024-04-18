@@ -5,6 +5,8 @@ from gi.repository import GLib, Gtk, Adw
 
 import os
 
+import pyvizgoompage
+
 class PyVizCustomizerPage(Adw.NavigationPage):
     def __init__(self, url_file_path, thumbnail_path, navigation_view):
         super().__init__()
@@ -30,6 +32,7 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         selected_video_box.append(thumbnail_image)
 
         selected_video_text_box = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 4)
+        selected_video_text_box.set_margin_end(16)
         selected_video_text_box.set_valign(Gtk.Align.CENTER)
 
         you_have_selected_text = Gtk.Label()
@@ -68,17 +71,25 @@ class PyVizCustomizerPage(Adw.NavigationPage):
 
         visualizer_options_stack = Adw.ViewStack()
 
-        pyviz_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 8)
+        pyviz_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 32)
         testlabel1 = Gtk.Label()
-        testlabel1.set_label("test1")
+        testlabel1.set_label("todo: add pyviz settings")
         pyviz_settings_page.append(testlabel1)
         visualizer_options_stack.add_titled_with_icon(pyviz_settings_page, "pyviz-settings-page", "PyViz", "folder-python-symbolic")
 
         goom_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 8)
-        testlabel2 = Gtk.Label()
-        testlabel2.set_label("test2")
-        goom_settings_page.append(testlabel2)
+        goom_visualize_button = Gtk.Button()
+        goom_visualize_button.set_margin_start(64)
+        goom_visualize_button.set_margin_end(64)
+        goom_visualize_button.set_label("Visualize!")
+        goom_visualize_button.add_css_class("pill")
+        goom_visualize_button.add_css_class("suggested-action")
+        goom_visualize_button.connect("clicked", self._goom_clicked, url_file_path, navigation_view)
+        goom_settings_page.append(goom_visualize_button)
+        
+
         visualizer_options_stack.add_titled_with_icon (goom_settings_page, "goom-settings-page", "GOOM", "folder-music-symbolic")
+
 
         settingsbox.append(visualizer_options_stack)
 
@@ -93,3 +104,6 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         toolbar_view.set_content(scrolled_window)
 
         self.set_child(toolbar_view)
+
+    def _goom_clicked(self, button, url_file_path, navigation_view):
+        navigation_view.push(pyvizgoompage.PyVizGoomPage(url_file_path))

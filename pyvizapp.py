@@ -303,3 +303,4 @@ class PyVizApplication (Adw.Application):
                 # ...as parameters to the constructor.
                 # After it is created, it is pushed to the navigation view. 
                 navigation_view.push(pyvizsearchresultspage.PyVizSearchResultsPage(url, feedback_text, submit_button, spinner, navigation_view))
+        return

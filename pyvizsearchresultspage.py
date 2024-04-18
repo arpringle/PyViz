@@ -70,6 +70,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         # It goes under the resultsbox, so you can still see that the program is working
         # As the various search results start to load in.
         search_spinner = Gtk.Spinner()
+        search_spinner.set_margin_top(16)
         search_spinner.set_size_request(32,32)
         mainbox.append(search_spinner)
         search_spinner.start()
@@ -180,18 +181,18 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
 
             # Google invented a wacky file format called .webp,
             # which is the format that they use to store YouTube thumbnails.
-            # Gtk doesn't play well with .webp sometimes, so let's make the images .jpg!
-            # We're going to convert the image to .jpg using PIL (the Pillow package)
+            # Gtk doesn't play well with .webp sometimes, so let's make the images .png!
+            # We're going to convert the image to .png using PIL (the Pillow package)
             # Here, we open the image we just found, as an image object,
             # Then split the filename and extension in two, in order to remove the .webp extension.
-            # Then we save it as .jpg
-            Image.open(thumbnail_path).save(os.path.splitext(thumbnail_path)[0] + ".jpg")
+            # Then we save it as .png
+            Image.open(thumbnail_path).save(os.path.splitext(thumbnail_path)[0] + ".png")
 
             # Delete the original unconverted thumbnail
             os.remove(thumbnail_path)
 
-            # Update the thumbnail path to point to the new .jpg version
-            thumbnail_path = os.path.splitext(thumbnail_path)[0] + ".jpg"
+            # Update the thumbnail path to point to the new .png version
+            thumbnail_path = os.path.splitext(thumbnail_path)[0] + ".png"
 
             # Create an image to hold the video thumbnail.
             # Then, request a size of 240p, and set the image from the path.
