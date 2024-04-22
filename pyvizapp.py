@@ -48,6 +48,7 @@ import threading
 # Used to give us a fresh .tmp directory ever time.
 from shutil import rmtree
 
+# Used to guarantee image format
 from PIL import Image
 
 # These pages pop up on the navigation depending on what the user does.

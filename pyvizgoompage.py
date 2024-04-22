@@ -73,7 +73,7 @@ class PyVizGoomPage(Adw.NavigationPage):
     def viz(self):
         Gst.init(None)
 
-        pipeline_str = "filesrc location=" + os.path.join("downloads", "audio", "cur_audio.wav") + " ! decodebin ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink"
+        pipeline_str = "filesrc location=" + os.path.join("downloads", "audio", "cur_audio.wav") + " ! wavparse ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink"
         pipeline = Gst.parse_launch(pipeline_str)
 
         loop = GLib.MainLoop()
