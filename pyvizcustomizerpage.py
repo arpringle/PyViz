@@ -8,7 +8,7 @@ import os
 import pyvizgoompage
 
 class PyVizCustomizerPage(Adw.NavigationPage):
-    def __init__(self, url_file_path, thumbnail_path, navigation_view):
+    def __init__(self, thumbnail_path, navigation_view):
         super().__init__()
 
         self.set_title("Customize the Visualizer")
@@ -41,7 +41,13 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         selected_video_text_box.append(you_have_selected_text)
 
         video_title_text = Gtk.Label()
-        video_title_text.set_label(os.path.splitext(os.path.split(url_file_path)[1])[0])
+        video_title_inprogress = os.path.split(thumbnail_path)[1]
+        video_title_inprogress = os.path.splitext(video_title_inprogress)[0]
+        video_title_inprogress = video_title_inprogress.split()[0:len(video_title_inprogress.split())-1]
+        video_title = ""
+        for word in video_title_inprogress:
+            video_title = video_title + word + " "
+        video_title_text.set_label(video_title)
         video_title_text.set_halign(Gtk.Align.START)
         video_title_text.set_justify(Gtk.Justification.LEFT)
         video_title_text.set_hexpand(True)
@@ -77,19 +83,31 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         pyviz_settings_page.append(testlabel1)
         visualizer_options_stack.add_titled_with_icon(pyviz_settings_page, "pyviz-settings-page", "PyViz", "folder-python-symbolic")
 
-        goom_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 8)
+        goom_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 16)
+
+        goom_description_label = Gtk.Label()
+        goom_description_label.set_use_markup(True)
+        goom_description_label.set_wrap(True)
+        goom_description_label.set_justify(Gtk.Justification.CENTER)
+        goom_description_label.set_label("<b><i>GOOM</i></b>  is a popular, open-source music visualizer.\nIt generates a cosmic scene based on your chosen audio.")
+        goom_settings_page.append(goom_description_label)
+
         goom_visualize_button = Gtk.Button()
         goom_visualize_button.set_margin_start(64)
         goom_visualize_button.set_margin_end(64)
         goom_visualize_button.set_label("Visualize!")
         goom_visualize_button.add_css_class("pill")
         goom_visualize_button.add_css_class("suggested-action")
-        goom_visualize_button.connect("clicked", self._goom_clicked, url_file_path, navigation_view)
+        url = os.path.split(thumbnail_path)[1]
+        url = os.path.splitext(url)[0]
+        url = url.split()
+        url = url[len(url)-1]
+
+        goom_visualize_button.connect("clicked", self._goom_clicked, url, navigation_view)
         goom_settings_page.append(goom_visualize_button)
         
 
         visualizer_options_stack.add_titled_with_icon (goom_settings_page, "goom-settings-page", "GOOM", "folder-music-symbolic")
-
 
         settingsbox.append(visualizer_options_stack)
 
@@ -105,5 +123,5 @@ class PyVizCustomizerPage(Adw.NavigationPage):
 
         self.set_child(toolbar_view)
 
-    def _goom_clicked(self, button, url_file_path, navigation_view):
-        navigation_view.push(pyvizgoompage.PyVizGoomPage(url_file_path))
+    def _goom_clicked(self, button, url, navigation_view):
+        navigation_view.push(pyvizgoompage.PyVizGoomPage(url, navigation_view))

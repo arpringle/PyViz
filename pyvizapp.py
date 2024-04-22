@@ -33,7 +33,7 @@ from gi.repository import GLib, Gtk, Adw
 # `yt_dlp` is an incredibly useful command-line tool for downloading content from YouTube.
 # `yt-dlp` also provides a Python package. Here, we import yt_dlp's 'YoutubeDL' class.
 # This class provides the actual downloader function.
-from yt_dlp import YoutubeDL
+from yt_dlp import YoutubeDL, DownloadError
 
 # We use the `validators` package to check that the URL that the user enters into the program
 # is actually a valid URL.
@@ -47,6 +47,8 @@ import threading
 # This lets us nuke a directory and all of its contents.
 # Used to give us a fresh .tmp directory ever time.
 from shutil import rmtree
+
+from PIL import Image
 
 # These pages pop up on the navigation depending on what the user does.
 # More explanation in their own files.
@@ -211,11 +213,11 @@ class PyVizApplication (Adw.Application):
         # We pass the Application object's "get_audio" method (defined below)
         # as the target of the thread.
         # Also, we further pass along all of the UI elements we wish to change.
-        audioDlThread = threading.Thread(target=self.get_audio, args=(url, button, spinner, feedback_text, navigation_view))
+        audioDlThread = threading.Thread(target=self.get_data, args=(url, button, spinner, feedback_text, navigation_view))
         audioDlThread.start()
     
     # This function downloads the data from YouTube. It is run asynchronously in a thread.
-    def get_audio(self, url, submit_button, spinner, feedback_text, navigation_view):
+    def get_data(self, url, submit_button, spinner, feedback_text, navigation_view):
 
         # We make some UI changes to indicate to the user that the program is working.
         # Namely, make the submit button insensitive to input and change the feedback text.
@@ -236,13 +238,20 @@ class PyVizApplication (Adw.Application):
             # Technically, we don't need to create the .tmp directory here,
             # because the YouTube downloader does it automatically, but this block
             # basically does all the error handling.
-            try: rmtree(".tmp")
-            except: os.mkdir(".tmp")
+            try:
+                rmtree(".tmp")
+                os.mkdir(".tmp")
+            except: 
+                os.mkdir(".tmp")
 
             # This is a dictionary containing runtime options for the downloader.
-            ydl_search_opts = {
-                # Save the downloaded data to a directory called .tmp\1\
-                'paths': {'home' : os.path.join(".tmp", 1)},
+            ydl_opts = {
+
+                # Save the downloads to a directory called .tmp\1\
+                # This means each search result gets a unique folder.
+                'paths': {
+                    'home' : os.path.join(".",".tmp", str(1))  
+                },
 
                 # Don't actually download the video itself at all.
                 # Remember, right now, we just want metadata.
@@ -251,17 +260,12 @@ class PyVizApplication (Adw.Application):
                 # Write the thumbnail to file
                 'writethumbnail' : 'true',
 
-                # Write the YouTube URL to file
-                'writeurllink' : 'true',
-
                 # If it's the thumbnail, we name the output file something like
                 # "IMG-videotitle.fileextension"
                 # If not, don't use the `IMG` part
                 'outtmpl' : {
-                    'default' : '%(title)s.%(ext)s',
-                    'thumbnail' : 'IMG-%(title)s'
+                    'default' : '%(title)s %(id)s'
                 }
-                
             }
 
             # Instantiate a `YoutubeDL` object, using `ydl_opts` as the parameter.
@@ -269,6 +273,24 @@ class PyVizApplication (Adw.Application):
             # This treats all user entries as URLs.
             # If YoutubeDL throws an error, the flow won't continue past this statement.
             YoutubeDL(ydl_opts).download(url)
+
+            # Declare a variable which will hold the path to the downloaded thumbnail.
+            thumbnail_path = os.path.join(".tmp", str(1), os.listdir(os.path.join(".tmp",str(1)))[0])
+
+            # Google invented a wacky file format called .webp,
+            # which is the format that they use to store YouTube thumbnails.
+            # Gtk doesn't play well with .webp sometimes, so let's make the images .png!
+            # We're going to convert the image to .png using PIL (the Pillow package)
+            # Here, we open the image we just found, as an image object,
+            # Then split the filename and extension in two, in order to remove the .webp extension.
+            # Then we save it as .png
+            Image.open(thumbnail_path).save(os.path.splitext(thumbnail_path)[0] + ".png")
+
+            # Delete the original unconverted thumbnail
+            os.remove(thumbnail_path)
+
+            # Update the thumbnail path to point to the new .png version
+            thumbnail_path = os.path.splitext(thumbnail_path)[0] + ".png"
 
             # If we get here, it means that the download was successful.
             # After YoutubeDL finishes, we revert the UI changes on the splash page:
@@ -278,10 +300,10 @@ class PyVizApplication (Adw.Application):
 
             # Now that we know which video we want, we can continue.
             # Push the visualizer customizer page to the navigation stack.
-            navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage())
+            navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage(thumbnail_path, navigation_view))
         
-        # If the download threw an error, we end up down here.
-        except:
+        # If the above `try` block fails (usually download error), we end up down here.
+        except DownloadError:
             # We check if the user input is a URL at all, using the `validators` package.
             if validators.url(url[0]):
                 # If it is a URL, we tell the user that the URL was unable to parse.
@@ -295,7 +317,7 @@ class PyVizApplication (Adw.Application):
             # However, if we get down here, it means that both...
             # 1) The download failed
             # 2) The entry doesn't validate as a URL
-            # ...then we can treat the entry as a search query instead.
+            # ...and now we can treat the entry as a search query instead.
             else:
                 # We create the search results page, passing...
                 # 1) the UI elements we want to change

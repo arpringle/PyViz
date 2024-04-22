@@ -143,16 +143,11 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
                 # Write the thumbnail to file
                 'writethumbnail' : 'true',
 
-                # Write the YouTube URL to file
-                'writewebloclink' : 'true',
-
                 # If it's the thumbnail, we name the output file something like
                 # "IMG-videotitle.fileextension"
                 # If not, don't use the `IMG` part
                 'outtmpl' : {
-                    'default' : '%(title)s',
-                    'link' : '%(title)s',
-                    'thumbnail' : 'IMG-%(title)s'
+                    'default' : '%(title)s %(id)s',
                 }
             }
             
@@ -173,15 +168,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             search_result_button_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing = 0)
 
             # Declare a variable which will hold the path to the downloaded thumbnail.
-            thumbnail_path = ""
-
-            # Look in .tmp\<i>, list all the files, and iterate through them.
-            for filename in os.listdir(os.path.join(".tmp",str(i))):
-                # If the filename contains "IMG-", we know that it is the thumbnail.
-                # This method might fail if the video title has "IMG-" in it,
-                if "IMG-" in filename:
-                    # Now we can save the relative path to the thumbnail
-                    thumbnail_path = os.path.join(".tmp", str(i), filename)
+            thumbnail_path = os.path.join(".tmp",str(i), os.listdir(os.path.join(".tmp",str(i)))[0])
 
             # Google invented a wacky file format called .webp,
             # which is the format that they use to store YouTube thumbnails.
@@ -206,16 +193,6 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             search_result_thumbnail.set_from_file(thumbnail_path)
             search_result_button_box.append(search_result_thumbnail)
 
-            # The path of the file containing the URL.
-            url_file_path = ""
-
-            for filename in os.listdir(os.path.join(".tmp",str(i))):
-                # If the filename contains "IMG-", we know that it is the thumbnail.
-                # This method might fail if the video title has "IMG-" in it,
-                if os.path.splitext(filename)[1] == ".webloc":
-                    # Now we can save the relative path to the thumbnail
-                    url_file_path = os.path.join(".tmp", str(i), filename)
-
             # Create a label to hold the title of the search result.
             # Allow the text to wrap if there is not enough space.
             # Allow it to expand if it gets more space.
@@ -225,7 +202,13 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             search_result_text = Gtk.Label()
             search_result_text.set_wrap(True)
             search_result_text.set_hexpand(True)
-            search_result_text.set_label(os.path.splitext(os.path.split(url_file_path)[1])[0])
+            search_result_title_inprogress = os.path.split(thumbnail_path)[1]
+            search_result_title_inprogress = os.path.splitext(search_result_title_inprogress)[0]
+            search_result_title_inprogress = search_result_title_inprogress.split()[0:len(search_result_title_inprogress.split())-1]
+            search_result_title = ""
+            for word in search_result_title_inprogress:
+                search_result_title = search_result_title + word + " "
+            search_result_text.set_label(search_result_title)
             search_result_button_box.append(search_result_text)
 
             # Set the completed search_result_button_box as the child of the search_result_button
@@ -233,7 +216,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
 
             # Connect the search_result_button's "clicked" signal to the  `_result_clicked` callback function.
             # We pass the
-            search_result_button.connect("clicked", self._result_clicked, url_file_path, thumbnail_path, navigation_view)
+            search_result_button.connect("clicked", self._result_clicked, thumbnail_path, navigation_view)
 
             # Add this result to the results
             resultsbox.append(search_result_button)
@@ -247,5 +230,5 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         return
 
     # Callback function for whenever a result is selected.
-    def _result_clicked(self, button, url_file_path, thumbnail_path, navigation_view):
-        navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage(url_file_path, thumbnail_path, navigation_view))
+    def _result_clicked(self, button, thumbnail_path, navigation_view):
+        navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage(thumbnail_path, navigation_view))

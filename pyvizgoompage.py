@@ -11,7 +11,7 @@ from yt_dlp import YoutubeDL
 import threading
 
 class PyVizGoomPage(Adw.NavigationPage):
-    def __init__(self, url_file_path):
+    def __init__(self, url, navigation_view):
         super().__init__()
         self.set_title("Visualizer Output")
 
@@ -20,23 +20,35 @@ class PyVizGoomPage(Adw.NavigationPage):
         header_bar = Adw.HeaderBar()
         toolbar_view.add_top_bar(header_bar)
 
-        mainbox = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 8)
+        mainbox = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 16)
+        mainbox.set_valign(Gtk.Align.CENTER)
         
         spinner = Gtk.Spinner()
         spinner.set_size_request(64,64)
         spinner.set_vexpand(True)
-        spinner.set_valign(Gtk.Align.CENTER)
+
         spinner.start()
         mainbox.append(spinner)
+
+        loading_text = Gtk.Label()
+        loading_text.set_label("\nPlease wait...\n\nYour song is being downloaded.")
+        loading_text.set_justify(Gtk.Justification.CENTER)
+        loading_text.add_css_class("title-1")
+        mainbox.append(loading_text)
+
+        explain_text = Gtk.Label()
+        explain_text.set_label("Your visualizer will start in its own window, momentarily.")
+        explain_text.set_justify(Gtk.Justification.CENTER)
+        mainbox.append(explain_text)
 
         toolbar_view.set_content(mainbox)
 
         self.set_child(toolbar_view)
 
-        download_thread = threading.Thread(target=self.download, args=(url_file_path, spinner, mainbox))
+        download_thread = threading.Thread(target=self.download, args=(url, navigation_view))
         download_thread.start()
 
-    def download(self, url_file_path, spinner, mainbox):
+    def download(self, url, navigation_view):
         ydl_opts = {
             'format': 'wav/bestaudio/best',
             'paths': {'home' : os.path.join("downloads", "audio")},
@@ -46,27 +58,19 @@ class PyVizGoomPage(Adw.NavigationPage):
                 'preferredcodec': 'wav',
             }]
         }
-        print(url_file_path)
-        url=""
-        i = 0
-        for line in open(url_file_path, "r"):
-            i = i+1
-            if i == 6:
-                url = line[9:(len(line)-10)]
-
         YoutubeDL(ydl_opts).download(url)
-        self.viz(spinner, mainbox)
+
+        navigation_view.pop()
+        self.viz()
         return
 
     def on_eos(self, bus, message, loop):
-        print("End of stream")
         loop.quit()
 
     def on_error(self, bus, message, loop):
-        print("Error:", message.parse_error())
         loop.quit()
 
-    def viz(self, spinner, mainbox):
+    def viz(self):
         Gst.init(None)
 
         pipeline_str = "filesrc location=" + os.path.join("downloads", "audio", "cur_audio.wav") + " ! decodebin ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink"
@@ -78,7 +82,7 @@ class PyVizGoomPage(Adw.NavigationPage):
         bus.connect("message::eos", self.on_eos, loop)
         bus.connect("message::error", self.on_error, loop)
 
-        spinner.stop()
+        
         pipeline.set_state(Gst.State.PLAYING)
 
         try:
