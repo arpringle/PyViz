@@ -1,7 +1,7 @@
 # `os` is used to access files in a system-independent way.
 import os
 
-# Explanation of these imports is in the `pyvizapp.py` file
+# Explanation of the Gtk, Adw, and GLib imports is in the `pyvizapp.py` file
 # However, we are importing one extra library this time.
 # GStreamer is a powerful media library, based on GObject.
 # We use gstreamer as an easy way to invoke the GOOM visualizer
@@ -145,7 +145,7 @@ class PyVizGoomPage(Adw.NavigationPage):
             loop.run()
         except KeyboardInterrupt:
             pass
-        
+
         # If we get here, the feed is over. Set the state from "playing" to "NULL"
         pipeline.set_state(Gst.State.NULL)
 
