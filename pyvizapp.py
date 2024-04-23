@@ -31,8 +31,9 @@ gi.require_version("Adw", "1")
 from gi.repository import GLib, Gtk, Adw
 
 # `yt_dlp` is an incredibly useful command-line tool for downloading content from YouTube.
-# `yt-dlp` also provides a Python package. Here, we import yt_dlp's 'YoutubeDL' class.
-# This class provides the actual downloader function.
+# `yt_dlp` also provides a Python package. Here, we import yt_dlp's 'YoutubeDL' class.
+# This class provides the actual downloader function, as well as the DownloadError error,
+# for error-handling purposes.
 from yt_dlp import YoutubeDL, DownloadError
 
 # We use the `validators` package to check that the URL that the user enters into the program
@@ -62,6 +63,7 @@ import pyvizcustomizerpage
 # 
 # The AdwApplication class handles a lot of the initialization
 # that Gtk and Adw need in order to run properly.
+# AdwApplication is a purely logical element. It contains no UI.
 class PyVizApplication (Adw.Application):
 
     # Constructor function 
@@ -128,7 +130,7 @@ class PyVizApplication (Adw.Application):
         logo.set_margin_top(32)
         mainbox.append(logo)
 
-        # Create  greeting text, center it, add it to the mainbox
+        # Create greeting text, center it, add it to the mainbox
         welcome_text = Gtk.Label()
         welcome_text.set_justify(Gtk.Justification.CENTER)
         welcome_text.set_valign(Gtk.Align.CENTER)
@@ -136,13 +138,14 @@ class PyVizApplication (Adw.Application):
         mainbox.append(welcome_text)
 
         # Create a horizontal sub-box that will hold the URL entry and the "Submit" button.
+        # It is referred to as a URL entry, even though it also accepts a search query.
         url_entry_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing=8)
         url_entry_box.set_halign(Gtk.Align.CENTER)
 
         # Create the URL entry and add it to the url_entry_box
         url_entry = Gtk.Entry()
         url_entry.set_size_request(256, 0)
-        url_entry.set_text("Enter URL Here...")
+        url_entry.set_text("Enter URL or Search...")
         url_entry_box.append(url_entry)
 
         # Create the submit button and add it to the url_entry_box
@@ -159,7 +162,7 @@ class PyVizApplication (Adw.Application):
         feedback_text_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing=8)
         feedback_text_box.set_halign(Gtk.Align.CENTER)
 
-        # Create a label to hold the feedback text, ie, any errors or messages.
+        # Create the feedback text, which can display any errors or messages.
         # Then add it to the feedback_text_box.
         feedback_text = Gtk.Label()
         feedback_text_box.append(feedback_text)
@@ -182,7 +185,7 @@ class PyVizApplication (Adw.Application):
         # we set it as the singular child of the navigation page.
         splash_nav_page.set_child(toolbar_view)
 
-        # Push the completed splash page into the navigation 
+        # Push the completed splash page into the navigation stack 
         navigation_view.push(splash_nav_page)
 
         # Now that the navigation view has at least one page,
@@ -193,7 +196,7 @@ class PyVizApplication (Adw.Application):
         window.present()
 
         # Connect the submit button's "clicked" signal to the appropriate function.
-        #This means that the `_submit_clicked` method will be called
+        # This means that the `_submit_clicked` method will be called
         # whenever the submit button is clicked
         #
         # The reason we pass so many UI elements as parameters is because
@@ -208,9 +211,10 @@ class PyVizApplication (Adw.Application):
         # !Important! Please note that the URL variable is actually a list and not a string.
         # because the YoutubeDL object's "download" function takes a list of URLs
         # as its parameter. However, we do not use that functionality.
+        # Further, we haven't actually checked if it's a URL or a query at this point!
         url = [url_entry.get_text()]
 
-        # Create a new thread in which we can download from YouTube asycnronously.
+        # Create a new thread in which we can download from YouTube asynchronously.
         # We pass the Application object's "get_audio" method (defined below)
         # as the target of the thread.
         # Also, we further pass along all of the UI elements we wish to change.
@@ -235,21 +239,23 @@ class PyVizApplication (Adw.Application):
         try:
             
             # This is weird, but basically, nuke the .tmp directory,
+            # And then recreate it.
             # Then, if we get any error, just create it instead.
             # Technically, we don't need to create the .tmp directory here,
-            # because the YouTube downloader does it automatically, but this block
-            # basically does all the error handling.
+            # because the YouTube downloader does it automatically.
+            # Better to be safe than sorry.
             try:
                 rmtree(".tmp")
                 os.mkdir(".tmp")
             except: 
                 os.mkdir(".tmp")
 
-            # This is a dictionary containing runtime options for the downloader.
+            # Instead of having one method with a Buuuuunch of params,
+            # yt_dlp's YTDownloader takes a dictionary of potential arguments.
+            # `ydl_opts` defines our download arguments
             ydl_opts = {
 
                 # Save the downloads to a directory called .tmp\1\
-                # This means each search result gets a unique folder.
                 'paths': {
                     'home' : os.path.join(".",".tmp", str(1))  
                 },
@@ -261,9 +267,11 @@ class PyVizApplication (Adw.Application):
                 # Write the thumbnail to file
                 'writethumbnail' : 'true',
 
-                # If it's the thumbnail, we name the output file something like
-                # "IMG-videotitle.fileextension"
-                # If not, don't use the `IMG` part
+
+                # We set the name of the output thumbnail as:
+                # <title> (SPACE) <url>
+                # We are actually using the filename to store the URL
+                # for when we need it later.
                 'outtmpl' : {
                     'default' : '%(title)s %(id)s'
                 }
@@ -272,10 +280,13 @@ class PyVizApplication (Adw.Application):
             # Instantiate a `YoutubeDL` object, using `ydl_opts` as the parameter.
             # Then, call the `download` method, passing `url` as a parameter.
             # This treats all user entries as URLs.
-            # If YoutubeDL throws an error, the flow won't continue past this statement.
+            # If YoutubeDL throws an error, the flow won't continue past this statement,
+            # and we will end up at the "except" block
             YoutubeDL(ydl_opts).download(url)
 
             # Declare a variable which will hold the path to the downloaded thumbnail.
+            # Ignore how ugly this line of code is. It basically grabs the first file
+            # in the tmp\1\ directory, which should be the download.
             thumbnail_path = os.path.join(".tmp", str(1), os.listdir(os.path.join(".tmp",str(1)))[0])
 
             # Google invented a wacky file format called .webp,
@@ -283,7 +294,7 @@ class PyVizApplication (Adw.Application):
             # Gtk doesn't play well with .webp sometimes, so let's make the images .png!
             # We're going to convert the image to .png using PIL (the Pillow package)
             # Here, we open the image we just found, as an image object,
-            # Then split the filename and extension in two, in order to remove the .webp extension.
+            # Then split the filename and extension, in order to remove the .webp extension.
             # Then we save it as .png
             Image.open(thumbnail_path).save(os.path.splitext(thumbnail_path)[0] + ".png")
 
@@ -303,7 +314,7 @@ class PyVizApplication (Adw.Application):
             # Push the visualizer customizer page to the navigation stack.
             navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage(thumbnail_path, navigation_view))
         
-        # If the above `try` block fails (usually download error), we end up down here.
+        # If the above `try` block fails (download error), we end up down here.
         except DownloadError:
             # We check if the user input is a URL at all, using the `validators` package.
             if validators.url(url[0]):

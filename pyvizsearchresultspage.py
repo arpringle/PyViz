@@ -93,10 +93,11 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
     # This function actually does the YouTube searching.
     def searchYouTube(self, search_query, resultsbox, spinner, navigation_view):
         # This is weird, but basically, nuke the .tmp directory,
+        # And then recreate it.
         # Then, if we get any error, just create it instead.
         # Technically, we don't need to create the .tmp directory here,
-        # because the YouTube downloader does it automatically, but this block
-        # basically does all the error handling.
+        # because the YouTube downloader does it automatically.
+        # Better to be safe than sorry.
         try:
             rmtree(".tmp")
             os.mkdir(".tmp")
@@ -111,13 +112,15 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
         for i in range(1,11):
             os.mkdir(os.path.join(".tmp", str(i)))
             
-            # This is a dictionary containing runtime options for the downloader.
+            # Instead of having one method with a Buuuuunch of params,
+            # yt_dlp's YTDownloader takes a dictionary of potential arguments.
+            # `ydl_opts` defines our download arguments
             ydl_search_opts = {
 
                 # The `default-search` option lets you specify how you want to search.
                 # Here, we tell it to ytsearch<i>
-                # This means, grab the first "i" (ie "first 5") search results.
-                # Using this functionaity, we could technically avoid using a for-loop.
+                # This means, "grab all of the first "i" (ie "first 5") search results".
+                # Using this functionality, we could technically avoid using a for-loop.
                 # However, we want to display the search results as they come in,
                 # and if we used the "grab the first i results" by itself, the user would have to
                 # wait for all of the results to come back before we could continue program flow,
@@ -155,11 +158,12 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             # Then, call the `download` method, passing `url` as a parameter.
             YoutubeDL(ydl_search_opts).download(search_query)
 
+            # !!!!!!!!!!
             # For the following UI elements, keep in mind that these are created for each result.
             # Their variable names are not unique outside of this for-loop.
 
             # First, we create a button, inside of which which the search result will be displayed.
-            # It's inside a button so that the user can click on the result to go to the next step.
+            # The result is inside a button so that the user can click on the result to go to the next step.
             # The `flat` style class makes it look cleaner.
             search_result_button = Gtk.Button()
             search_result_button.add_css_class("flat")
@@ -168,6 +172,8 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             search_result_button_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing = 0)
 
             # Declare a variable which will hold the path to the downloaded thumbnail.
+            # Ignore how ugly this line of code is. It basically grabs the first file
+            # in the tmp\1\ directory, which should be the download.
             thumbnail_path = os.path.join(".tmp",str(i), os.listdir(os.path.join(".tmp",str(i)))[0])
 
             # Google invented a wacky file format called .webp,
@@ -196,18 +202,26 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             # Create a label to hold the title of the search result.
             # Allow the text to wrap if there is not enough space.
             # Allow it to expand if it gets more space.
-            # Then, set the label based off of the filename of the url_file_path,
-            # Which should just be the video title.
+            # Then, set the label based off of the filename of the url_file_path.
             # Then add it to the search results box.
             search_result_text = Gtk.Label()
             search_result_text.set_wrap(True)
             search_result_text.set_hexpand(True)
+
+            # In this super fun block of code we isolate the video title
+            # from the rest of the thumbnail path.
+            # First, we split the filename from the path
             search_result_title_inprogress = os.path.split(thumbnail_path)[1]
+            # Then, we excise the file extension
             search_result_title_inprogress = os.path.splitext(search_result_title_inprogress)[0]
-            search_result_title_inprogress = search_result_title_inprogress.split()[0:len(search_result_title_inprogress.split())-1]
+            # Then, we tokenize the string, and remove the last token.
+            # (The URL would be the last token)
+            search_result_title_inprogress = search_result_title_inprogress.split()[0:len(search_result_title_inprogress.split())-1]\
+            # Then we re-unite the tokens into a string containing just the video title.
             search_result_title = ""
             for word in search_result_title_inprogress:
                 search_result_title = search_result_title + word + " "
+            # Now, we are done.
             search_result_text.set_label(search_result_title)
             search_result_button_box.append(search_result_text)
 
@@ -215,7 +229,7 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
             search_result_button.set_child(search_result_button_box)
 
             # Connect the search_result_button's "clicked" signal to the  `_result_clicked` callback function.
-            # We pass the
+            # Also, pass the thumbnail path ant the navigation view
             search_result_button.connect("clicked", self._result_clicked, thumbnail_path, navigation_view)
 
             # Add this result to the results
@@ -231,4 +245,5 @@ class PyVizSearchResultsPage(Adw.NavigationPage):
 
     # Callback function for whenever a result is selected.
     def _result_clicked(self, button, thumbnail_path, navigation_view):
+        # Push the customizer page to the navigation stack.
         navigation_view.push(pyvizcustomizerpage.PyVizCustomizerPage(thumbnail_path, navigation_view))
