@@ -1,7 +1,18 @@
+# PyViz, a Python music visualizer.
+# Program by Austin Pringle, Caleb Rachocki, & Caleb Ruby
+# Pennsylvania Western University, California
+#
+# pyvizapp.py
+# This file contains the main application class.
+# This file also handles the creation and function of the first page of the UI.
+
+
 # PACKAGE IMPORTS
 
 # `os` is used to access files in a system-independent way.
 import os
+
+# The explanation of these next libraries is a bit complicated.
 
 # GObject is a library for the C language that adds Object-Oriented features.
 # `gi` (short for "GObject Introspection") is a package that provides Python versions
@@ -18,8 +29,8 @@ gi.require_version("Adw", "1")
 # Then, we officially import what we need from `gi`.
 # As for what these packages actually do:
 #
-# - `GLib` is an alternative standard library for C, written with GObject in mind.
-#   It implements many common data structures and similar things.
+# - `GLib` is an alternative standard library for C, and it forms the basis of GObject.
+#   It implements many common data structures and the like.
 #   The package imported here is the Python version of GLib.
 #   We don't directly use it, but our next two libraries depend on it heavily.  
 # 
@@ -61,7 +72,7 @@ import pyvizcustomizerpage
 
 # Create the Application Class, inheriting from AdwApplication
 # 
-# The AdwApplication class handles a lot of the initialization
+# The AdwApplication class automatically handles a lot of the initialization
 # that Gtk and Adw need in order to run properly.
 # AdwApplication is a purely logical element. It contains no UI.
 class PyVizApplication (Adw.Application):
@@ -169,7 +180,7 @@ class PyVizApplication (Adw.Application):
 
         # Create a loading spinner to show beside the feedback_text.
         # This is used when an operation is taking place.
-        # The spinner is hidden by default, only shown when we call the `.start()` method.
+        # Note - The spinner is hidden by default, only shown when we call the `.start()` method.
         # Then we, add it to the feedback_text_box.
         feedback_text_spinner = Gtk.Spinner()
         feedback_text_box.append(feedback_text_spinner)
@@ -209,7 +220,7 @@ class PyVizApplication (Adw.Application):
             
         # Get the text from the URL entry, and write it to the variable `url`
         # !Important! Please note that the URL variable is actually a list and not a string.
-        # because the YoutubeDL object's "download" function takes a list of URLs
+        # This is because the YoutubeDL object's "download" function takes a list of URLs
         # as its parameter. However, we do not use that functionality.
         # Further, we haven't actually checked if it's a URL or a query at this point!
         url = [url_entry.get_text()]
@@ -217,6 +228,7 @@ class PyVizApplication (Adw.Application):
         # Create a new thread in which we can download from YouTube asynchronously.
         # We pass the Application object's "get_audio" method (defined below)
         # as the target of the thread.
+        # We then pass the URL (it might be a query but we call the variable `url`).
         # Also, we further pass along all of the UI elements we wish to change.
         audioDlThread = threading.Thread(target=self.get_data, args=(url, button, spinner, feedback_text, navigation_view))
         audioDlThread.start()
@@ -251,7 +263,7 @@ class PyVizApplication (Adw.Application):
                 os.mkdir(".tmp")
 
             # Instead of having one method with a Buuuuunch of params,
-            # yt_dlp's YTDownloader takes a dictionary of potential arguments.
+            # yt_dlp's YoutubeDL object takes a dictionary of potential arguments.
             # `ydl_opts` defines our download arguments
             ydl_opts = {
 

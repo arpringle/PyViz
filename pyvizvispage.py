@@ -2,22 +2,18 @@
 # Program by Austin Pringle, Caleb Rachocki, & Caleb Ruby
 # Pennsylvania Western University, California
 #
-# pyvizgoompage.py
-# This file contains the loading page for the GOOM visuakizer
-# This page has the logic to build a GStreamer pipeline to create the GOOM Visualization
+# pyvizvispage.py
+# This file contains the loading page for our custom visualizer.
+# This page has the logic to download the song and create our custom visualization
 
 # `os` is used to access files in a system-independent way.
 import os
 
-# Explanation of the Gtk, Adw, and GLib imports is in the `pyvizapp.py` file
-# However, we are importing one extra library this time.
-# GStreamer is a powerful media library, based on GObject.
-# We use gstreamer as an easy way to invoke the GOOM visualizer
+# Explanation of these imports is in the `pyvizapp.py` file
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-gi.require_version('Gst', '1.0')
-from gi.repository import GLib, Gtk, Adw, Gst
+from gi.repository import GLib, Gtk, Adw
 
 # Hey it's the YouTube downloader again! See `pyvizapp.py` for more information.
 from yt_dlp import YoutubeDL
@@ -25,12 +21,19 @@ from yt_dlp import YoutubeDL
 # We run the download of the audio asynchronously 
 import threading
 
-# Like all the other pages, the GOOM page inherits from AdwNavigationPage
-class PyVizGoomPage(Adw.NavigationPage):
+import visualizerengine
+
+# Like all the other pages, the vis page inherits from AdwNavigationPage
+class PyVizVisPage(Adw.NavigationPage):
     # Constructor function 
-    def __init__(self, url, navigation_view):
+    def __init__(self, url, navigation_view, fg_color, bg_color):
         # Use the parent class's constructor logic.
         super().__init__()
+
+
+
+        self.fg_color = fg_color
+        self.bg_color = bg_color
 
         # Set the title of this page
         self.set_title("Visualizer Output")
@@ -109,53 +112,6 @@ class PyVizGoomPage(Adw.NavigationPage):
         self.viz()
         
         return
-    
-    # Helper function for GStreamer
-    def on_eos(self, bus, message, loop):
-        loop.quit()
 
-    # Helper function for GStreamer
-    def on_error(self, bus, message, loop):
-        loop.quit()
-
-    # The visualizer function.
     def viz(self):
-        
-        # Initialize GStreamer
-        Gst.init(None)
-
-        # The GStreamer media library is based on a "pipeline" approach.
-        # Media is manipulated by putting it through various "elements".
-        # Linking these elements together makes a "pipeline"
-        # The following string defines our pipeline.
-        # First, grab the audio we want to visualize from .\downloads\audio\cur_audio.wav.
-        # Parse it using the "wavparse" element
-        # Next, we branch out the pipeline using the "tee" element.
-        # The first branch converts and resamples the audio into an optimal format,
-        # then plays it using a platform-appropriate method.
-        # Now, "t." lets us work on the second branch, which takes the parsed wav from just before the tee,
-        # converts it to an appropriate format for visualization, visualizes it using GOOM,
-        # and then converts and outputs the video feed in a platform-appropriate way.
-        pipeline_str = "filesrc location=" + os.path.join("downloads", "audio", "cur_audio.wav") + " ! wavparse ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink"
-        
-        # We parse and launch our pipeline with this convenience function.
-        pipeline = Gst.parse_launch(pipeline_str)
-
-        # This is basic GStreamer boilerplate to start the pipeline
-        loop = GLib.MainLoop()
-        bus = pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message::eos", self.on_eos, loop)
-        bus.connect("message::error", self.on_error, loop)
-        pipeline.set_state(Gst.State.PLAYING)
-
-        # This allows the user to stop the playing from the terminal
-        try:
-            loop.run()
-        except KeyboardInterrupt:
-            pass
-
-        # If we get here, the feed is over. Set the state from "playing" to "NULL"
-        pipeline.set_state(Gst.State.NULL)
-
-        return
+        visualizerengine.run_audio_visualizer(os.path.join("downloads","audio","cur_audio.wav"), self.fg_color, self.bg_color) 

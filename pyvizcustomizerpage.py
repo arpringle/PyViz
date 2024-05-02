@@ -1,3 +1,11 @@
+# PyViz, a Python music visualizer.
+# Program by Austin Pringle, Caleb Rachocki, & Caleb Ruby
+# Pennsylvania Western University, California
+#
+# pyvizcustomizerpage.py
+# This file contains the visualizer customization page.
+# This page has the logic to let the user choose what options they want for the visualization.
+
 # `os` is used to access files in a system-independent way.
 import os
 
@@ -5,9 +13,10 @@ import os
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import GLib, Gtk, Adw
+from gi.repository import GLib, Gtk, Gdk, Adw
 
 # This is the next page in the navigation progression.
+import pyvizvispage
 import pyvizgoompage
 
 # Inherit from AdNavigationPage.
@@ -119,13 +128,87 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         # "views" to switch between.
         visualizer_options_stack = Adw.ViewStack()
 
+        # Retrieve the URL from the thumbnail, 
+        # by taking the last token of the extensionless, pathless, file name
+        url = os.path.split(thumbnail_path)[1]
+        url = os.path.splitext(url)[0]
+        url = url.split()
+        url = url[len(url)-1]
+
         # The views can be any widget, but in this case,
         # we present a box with settings for the selected visualizer
         # Here is the pyviz settings page.
-        pyviz_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 32)
-        testlabel1 = Gtk.Label()
-        testlabel1.set_label("todo: add pyviz settings")
-        pyviz_settings_page.append(testlabel1)
+        pyviz_settings_page = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 16)
+
+        vis_description_label = Gtk.Label()
+        vis_description_label.set_wrap(True)
+        vis_description_label.set_justify(Gtk.Justification.CENTER)
+        vis_description_label.set_use_markup(True)
+        vis_description_label.set_label("This is the built-in music visualizer.\nGo ahead and give it a try!")
+        pyviz_settings_page.append(vis_description_label)
+
+        pyviz_settings_colors_label = Gtk.Label()
+        pyviz_settings_colors_label.set_label("Customize Colors:")
+        pyviz_settings_colors_label.add_css_class("title-2")
+        pyviz_settings_page.append(pyviz_settings_colors_label)
+
+        bg_color_selection_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing=16)
+        bg_color_selection_box.set_halign(Gtk.Align.CENTER)
+
+        bg_color_selection_label = Gtk.Label()
+        bg_color_selection_label.set_label("Background Color:")
+        bg_color_selection_box.append(bg_color_selection_label)
+
+        bg_color_selection_button = Gtk.ColorDialogButton()
+        bg_default_color = Gdk.RGBA()
+        bg_default_color.parse("rgb(255, 255, 255)")
+        bg_color_selection_button.set_rgba(bg_default_color)
+        bg_color_selector = Gtk.ColorDialog()
+        bg_color_selection_button.set_dialog(bg_color_selector)
+        bg_color_selection_box.append(bg_color_selection_button)
+
+        pyviz_settings_page.append(bg_color_selection_box)
+
+        fg_color_selection_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL, spacing=16)
+        fg_color_selection_box.set_halign(Gtk.Align.CENTER)
+
+        fg_color_selection_label = Gtk.Label()
+        fg_color_selection_label.set_label("     Visualizer Color:")
+        fg_color_selection_box.append(fg_color_selection_label)
+
+        fg_color_selection_button = Gtk.ColorDialogButton()
+        fg_default_color = Gdk.RGBA()
+        fg_default_color.parse("rgb(53, 132, 228)")
+        fg_color_selection_button.set_rgba(fg_default_color)
+        fg_color_selector = Gtk.ColorDialog()
+        fg_color_selection_button.set_dialog(fg_color_selector)
+        fg_color_selection_box.append(fg_color_selection_button)
+
+        pyviz_settings_page.append(fg_color_selection_box)
+
+        pyviz_settings_color_disclaimer = Gtk.Label()
+        pyviz_settings_color_disclaimer.set_label("Note: PyViz does not support transparency for visualizer colors.")
+        pyviz_settings_color_disclaimer.set_justify(Gtk.Justification.CENTER)
+        pyviz_settings_color_disclaimer.add_css_class("caption")
+        pyviz_settings_page.append(pyviz_settings_color_disclaimer)
+
+        vis_visualize_button = Gtk.Button()
+        vis_visualize_button.set_margin_start(64)
+        vis_visualize_button.set_margin_end(64)
+        vis_visualize_button.set_margin_top(16)
+        vis_visualize_button.set_margin_bottom(16)
+        vis_visualize_button.set_label("Visualize!")
+        vis_visualize_button.add_css_class("pill")
+        vis_visualize_button.add_css_class("suggested-action")
+
+        # When the goom visualize button is clicked, we add a new page to the navigation.
+        # We pass the url and the nav view to the new page.
+        vis_visualize_button.connect("clicked", self._vis_clicked, url, navigation_view, bg_color_selection_button, fg_color_selection_button)
+
+        # Add the button to the page.
+        pyviz_settings_page.append(vis_visualize_button)
+
+
         visualizer_options_stack.add_titled_with_icon(pyviz_settings_page, "pyviz-settings-page", "PyViz", "audio-volume-high-symbolic")
 
         # Here is the goom settings page.
@@ -138,21 +221,16 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         goom_description_label.set_use_markup(True)
         goom_description_label.set_label("<b><i>GOOM</i></b>  is a popular, open-source music visualizer.\nIt generates a cosmic scene based on your chosen audio.")
         goom_settings_page.append(goom_description_label)
+        
 
         # Here is the nice round blue button for visualizing using GOOM.
         goom_visualize_button = Gtk.Button()
         goom_visualize_button.set_margin_start(64)
         goom_visualize_button.set_margin_end(64)
+        goom_visualize_button.set_margin_top(64)
         goom_visualize_button.set_label("Visualize!")
         goom_visualize_button.add_css_class("pill")
         goom_visualize_button.add_css_class("suggested-action")
-
-        # Retrieve the URL from the thumbnail, 
-        # by taking the last token of the extensionless, pathless, file name
-        url = os.path.split(thumbnail_path)[1]
-        url = os.path.splitext(url)[0]
-        url = url.split()
-        url = url[len(url)-1]
 
         # When the goom visualize button is clicked, we add a new page to the navigation.
         # We pass the url and the nav view to the new page.
@@ -185,7 +263,14 @@ class PyVizCustomizerPage(Adw.NavigationPage):
         # Set the toolbarview as the child of this navigation view
         self.set_child(toolbar_view)
 
+    # When the "visualize" button on the pyviz page is clicked, we come down here
+    def _vis_clicked(self, button, url, navigation_view, bg_color, fg_color):
+        # This nav page handles all the logic of making PyViz happen
+        navigation_view.push(pyvizvispage.PyVizVisPage(url, navigation_view, fg_color.get_rgba(), bg_color.get_rgba(),))
+
     # When the "visualize" button on the goom page is clicked, we come down here
     def _goom_clicked(self, button, url, navigation_view):
         # This nav page handles all the logic of making GOOM happen
         navigation_view.push(pyvizgoompage.PyVizGoomPage(url, navigation_view))
+
+        
