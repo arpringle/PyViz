@@ -4,37 +4,20 @@ PyViz is a Python-based music visualizer.
 
 It allows you to make a music visualization from your favorite song or YouTube video quickly and easily.
 
-## Run Instructions
+## Windows Run Instructions
 
-### Windows
+It's... complicated.
 
-On Windows we recommend downloading our dedicated installer. It takes some time for it to do its thing (potentially a really long time), however, it should configure all of the needed dependencies automatically.
+1) Download the MSYS2 installer from [this link.](https://github.com/msys2/msys2-installer/releases/download/2024-01-13/msys2-x86_64-20240113.exe) MSYS2 is a UNIX environment for Windows, and it provides all of the dependencies that PyViz needs in order to run. 
 
-You can find the installer download here: [TODO]
+2) MSYS2 will be installed into `C:/tools/msys64`. Using file explorer, unzip the source code folder (the folder this README is in), and copy the entire folder into  into `C:/tools/msys64/home/<your-username-here>/`.
 
-### Linux
+3) Next, find the start menu shortcut for `ucrt64.exe`, and run it.
 
-#### Dependencies
+4) In the terminal that pops up, copy and paste the following very long command: `pacman -Syu ; pacman -S --noconfirm mingw-w64-ucrt-x86_64-gtk4 mingw-w64-ucrt-x86_64-python3 mingw-w64-ucrt-x86_64-python3-gobject mingw-w64-ucrt-x86_64-gstreamer mingw-w64-ucrt-x86_64-gst-plugins-base mingw-w64-ucrt-x86_64-gst-plugins-good mingw-w64-ucrt-x86_64-gst-plugins-bad mingw-w64-ucrt-x86_64-gst-plugins-ugly mingw-w64-ucrt-x86_64-yt-dlp mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-python-pygame mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-libadwaita mingw-w64-ucrt-x86_64-python-librosa ; pip install validators` 
 
-Running PyViz on Linux requires a few packages.
+(yes, that is a one-line command.)
 
-On Debian and related distributions (Ubuntu, Mint, Pop!_OS, etc), open a terminal and enter:
+5) Once that very long command is done running, you can run `python ./home/<your-username-here>/pyviz/main.py` to run PyViz.
 
-`sudo apt install python3 python3-gi python3-validators yt-dlp libadwaita-1-0 libgstreamer1.0-0`
-
-> Please note: Debian Stable does not contain the correct versions for all of these dependencies. The program will likely not run on Debian stable, but it should work on Debian Testing.
-
-On Fedora and related distributions (Red Hat, Rocky, etc):
-
-`sudo dnf install python3 python3-gobject python3-validators yt-dlp libadwaita libgstreamer1`
-
-#### Next Steps
-
-Once you have the dependencies installed, simply download the repository from GitHub by pressing the "Code" button and then the "Download Zip" Button. Once you have it downloaded, open a terminal and enter the following commands in order:
-
-```
-cd ~/Downloads
-unzip PyViz-Main.zip
-cd PyViz-Main
-python3 main.py
-```
+That's a lot to do, but, after the initial setup, you'll never have to do it again. Any time you want to run PyViz, simply open `ucrt64.exe` from the start menu and enter  `python ./home/<your-username-here>/pyviz/main.py`
