@@ -10,9 +10,9 @@ It's... complicated.
 
 1) Download the MSYS2 installer from [this link.](https://github.com/msys2/msys2-installer/releases/download/2024-01-13/msys2-x86_64-20240113.exe) MSYS2 is a UNIX environment for Windows, and it provides all of the dependencies that PyViz needs in order to run. 
 
-2) MSYS2 will be installed into `C:/tools/msys64`. Using file explorer, unzip the source code folder (the folder this README is in), and copy the entire folder into  into `C:/tools/msys64/home/<your-username-here>/`.
+2) MSYS2 will be installed into `C:/msys64`. Using file explorer, unzip the source code folder (the folder this README is in), and copy the entire folder into  into `C:/msys64/home/<your-username-here>/`.
 
-3) Next, find the start menu shortcut for `ucrt64.exe`, and run it.
+3) Next, find the search the start menu for `MSYS ucrt64`, or something similarly namedand run it.
 
 4) In the terminal that pops up, copy and paste the following very long command: `pacman -Syu ; pacman -S --noconfirm mingw-w64-ucrt-x86_64-gtk4 mingw-w64-ucrt-x86_64-python3 mingw-w64-ucrt-x86_64-python3-gobject mingw-w64-ucrt-x86_64-gstreamer mingw-w64-ucrt-x86_64-gst-plugins-base mingw-w64-ucrt-x86_64-gst-plugins-good mingw-w64-ucrt-x86_64-gst-plugins-bad mingw-w64-ucrt-x86_64-gst-plugins-ugly mingw-w64-ucrt-x86_64-yt-dlp mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-python-pygame mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-libadwaita mingw-w64-ucrt-x86_64-python-librosa ; pip install validators` 
 
