@@ -20,6 +20,6 @@ It's... complicated.
 
 (yes, that is a one-line command.)
 
-5) Once that very long command is done running, you can run `python ./home/<your-username-here>/pyviz/main.py` to run PyViz.
+5) Once that very long command is done running, you can run `python ./home/<your-username-here>/PyVizSourceCode/main.py` to run PyViz.
 
-That's a lot to do, but, after the initial setup, you'll never have to do it again. Any time you want to run PyViz, simply open `ucrt64.exe` from the start menu and enter  `python ./home/<your-username-here>/pyviz/main.py`
+That's a lot to do, but, after the initial setup, you'll never have to do it again. Any time you want to run PyViz, simply open `ucrt64.exe` from the start menu and enter  `python ./home/<your-username-here>/PyVizSourceCode/main.py`
